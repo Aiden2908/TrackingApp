@@ -85,9 +85,7 @@ public class LocationResource {
         }
         return location.getXMLString();
 
-    }
-
-    ;
+    };
     
     @POST
     @Consumes(MediaType.APPLICATION_XML)
@@ -124,6 +122,20 @@ public class LocationResource {
                 return "<error><reason>Invalid content</reason></error>";
             }
             return location.getXMLString();
+        }else if (percent.equals("longlat")) {
+            Location location;
+            try {
+                String attr[] = XML.split(",");
+                location = new Location(attr[0], attr[1], attr[2], attr[3]);
+                String sqlException = locationBean.updateUserLocation(location);
+                if (sqlException != null) {
+                    return "<error><reason>" + sqlException + "</reason></error>";
+                }
+            } catch (Exception e) {
+                return "<error><reason>Invalid content</reason></error>";
+            }
+            return location.getXMLString();
+            
         }
         buffer.append("</stock>");
 
