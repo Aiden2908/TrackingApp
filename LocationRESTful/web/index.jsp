@@ -15,8 +15,8 @@
         <h1>Location Restful Web Service</h1>
         
         <a style="text-decoration: none; text-transform: uppercase" href="<%= response.encodeURL(request.getContextPath())%>/locationservice/location">Get all logged user data</a></br>
-        <a href="<%= response.encodeURL(request.getContextPath())%>/locationservice/stock/positive">Get positive stock</a></br>
-        <a href="<%= response.encodeURL(request.getContextPath())%>/locationservice/stock/negative">Get negative stock</a></br>
+        <a href="<%= response.encodeURL(request.getContextPath())%>/locationservice/location/positive">Get positive stock</a></br>
+        <a href="<%= response.encodeURL(request.getContextPath())%>/locationservice/location/negative">Get negative stock</a></br>
         
     </body>
 </html>

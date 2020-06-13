@@ -19,18 +19,18 @@ import javax.ws.rs.core.UriInfo;
  *
  * @author Rob
  */
-
 @Named
 @Path("/location")
 public class LocationResource {
+
     @EJB
     private LocationBean locationBean;
     @Context
     private UriInfo context;
     private static final char QUOTE = '\"';
-    
+
     public LocationResource() {
-        
+
     }
 
     @GET
@@ -38,19 +38,18 @@ public class LocationResource {
     public String getAllStock() {
         StringBuilder buffer = new StringBuilder();
         buffer.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-        buffer.append("<stock uri=").append(QUOTE).append(context.getAbsolutePath()).append(QUOTE).append(">");
-
+        buffer.append("<users uri=").append(QUOTE).append(context.getAbsolutePath()).append(QUOTE).append(">");
         Collection<Location> allStock = locationBean.getLocationList();
 
-        for(Location stock : allStock) {
+        for (Location stock : allStock) {
             buffer.append(stock.getXMLString());
         }
 
-        buffer.append("</stock>");
+        buffer.append("</users>");
 
         return buffer.toString();
     }
-    
+
     @GET
     @Produces(MediaType.APPLICATION_XML)
     @Path("{percent}")
@@ -61,31 +60,74 @@ public class LocationResource {
 
         Collection<Location> allStock = locationBean.getLocationList();
 
-        for(Location stock : allStock) {
+        for (Location stock : allStock) {
         }
 
         buffer.append("</stock>");
 
         return buffer.toString();
     }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_XML)
+    @Produces(MediaType.APPLICATION_XML)
+    public String registerUser(String XML) {
+        Location location;
+        try {
+            String attr[] = XML.split(",");
+            location = new Location(attr[0], attr[1], attr[2], attr[3]);
+            String sqlException = locationBean.registerNewUser(location);
+            if (sqlException != null) {
+                return "<error><reason>" + sqlException + "</reason></error>";
+            }
+        } catch (Exception e) {
+            return "<error><reason>Invalid content</reason></error>";
+        }
+        return location.getXMLString();
+
+    }
+
+    ;
     
     @POST
     @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_XML)
-    public String simpleTest(String XML) {
-        Location location;
-        try{
-            String attr[]=XML.split(",");
-            location=new Location(attr[0],attr[1],attr[2],attr[3]);
-            String sqlException =locationBean.registerNewUser(location);
-            if(sqlException!=null){
-                return "<error><reason>"+sqlException+"</reason></error>";
+    @Path("{percent}")
+    public String loginUser(@PathParam("percent") String percent, String XML) {
+        StringBuilder buffer = new StringBuilder();
+        buffer.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+        buffer.append("<stock uri=").append(QUOTE).append(context.getAbsolutePath()).append(QUOTE).append(">");
+
+        if (percent.equals("positive")) {
+            Location location;
+            try {
+                String attr[] = XML.split(",");
+                location = new Location(attr[0], attr[1], attr[2], attr[3]);
+                String sqlException = locationBean.userStates(location, 1);
+                if (sqlException != null) {
+                    return "<error><reason>" + sqlException + "</reason></error>";
+                }
+            } catch (Exception e) {
+                return "<error><reason>Invalid content</reason></error>";
             }
-        }catch(Exception e){
-            return "<error><reason>Invalid body</reason></error>";
+            return location.getXMLString();
+        } else if (percent.equals("negative")) {
+            Location location;
+            try {
+                String attr[] = XML.split(",");
+                location = new Location(attr[0], attr[1], attr[2], attr[3]);
+                String sqlException = locationBean.userStates(location, 0);
+                if (sqlException != null) {
+                    return "<error><reason>" + sqlException + "</reason></error>";
+                }
+            } catch (Exception e) {
+                return "<error><reason>Invalid content</reason></error>";
+            }
+            return location.getXMLString();
         }
-        return location.getXMLString();
-    
-    };
-    
+        buffer.append("</stock>");
+
+        return buffer.toString();
+    }
+
 }

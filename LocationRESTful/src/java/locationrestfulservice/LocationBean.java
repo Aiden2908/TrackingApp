@@ -29,6 +29,7 @@ public class LocationBean {
     }
 
     public ArrayList<Location> getLocationList() {
+        addLocationFromDatabase();
         return locationList;
     }
 
@@ -40,8 +41,9 @@ public class LocationBean {
     public void addLocationFromDatabase() {
         try {
             Statement st = getConn().createStatement();
-            ResultSet rs = st.executeQuery("select * from LocationAssignment");
+            ResultSet rs = st.executeQuery("select * from LocationAssignment where isLoggedIn=1");
             System.out.println(rs.getMetaData().getColumnCount());
+            locationList.clear();
 
             while (rs.next()) {
                 String email = rs.getString(1);
@@ -59,12 +61,13 @@ public class LocationBean {
     // Method which pulls the data from the database and then saves it in the locationList
     public String registerNewUser(Location location) {
         try {
-            String sql = "INSERT INTO testUnrestricted.LocationAssignment (email,password,longitude,latitude) VALUES (?,?,?,?);";
+            String sql = "INSERT INTO testUnrestricted.LocationAssignment (email,password,longitude,latitude,isLoggedIn) VALUES (?,?,?,?,?);";
             PreparedStatement pstmt = getConn().prepareStatement(sql);
             pstmt.setString(1, location.getEmail());
             pstmt.setString(2, location.getPassword());
             pstmt.setString(3, location.getLongitude());
             pstmt.setString(4, location.getLatitude());
+            pstmt.setInt(5, 1);
 
             pstmt.executeUpdate();
 
@@ -72,9 +75,27 @@ public class LocationBean {
             if (ex.getErrorCode() == 1062) {
                 //duplicate primary key 
                 return "userAlreadyExists";
-                
             }
             return "SQLException";
+        }
+        return null;
+    }
+    
+    //Method to handle setting user states to either logged logged in or logged out.
+    public String userStates(Location location,int isLoggedIn) {
+        try {
+            Statement st = getConn().createStatement();
+            ResultSet rs = st.executeQuery("select * from LocationAssignment where email='"+location.getEmail()+"' and password='"+location.getPassword()+"';");
+            System.out.println(rs.getMetaData().getColumnCount());
+
+            while (rs.next()) {
+                String sql = "UPDATE testUnrestricted.LocationAssignment SET isLoggedIn = ? WHERE email='"+location.getEmail()+"' and password='"+location.getPassword()+"';";
+                PreparedStatement pstmt = getConn().prepareStatement(sql);
+                pstmt.setInt(1, isLoggedIn);
+                pstmt.executeUpdate();
+            }
+        } catch (SQLException ex) {
+            return "SQLException "+ex;
         }
         return null;
     }
