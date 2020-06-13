@@ -1,6 +1,8 @@
 package locationrestfulservice;
 
+import java.io.StringReader;
 import javax.ejb.Singleton;
+import javax.xml.bind.JAXB;
 
 /**
  *
@@ -27,12 +29,12 @@ public class Location {
     public String getXMLString() {
         StringBuilder buffer = new StringBuilder();
         
-        buffer.append("<stock>");
+        buffer.append("<user>");
         buffer.append("<email>").append(email).append("</email>");
         buffer.append("<password>").append(password).append("</password>");
         buffer.append("<longitude>").append(longitude).append("</longitude>");
         buffer.append("<latitude>").append(latitude).append("</latitude>");
-        buffer.append("</stock>");
+        buffer.append("</user>");
         
         return buffer.toString();
     }
@@ -68,4 +70,5 @@ public class Location {
     public void setLatitude(String latitude) {
         this.latitude = latitude;
     }
+    
 }
