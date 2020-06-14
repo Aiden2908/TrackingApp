@@ -1,4 +1,4 @@
-package locationrestfulservice;
+
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -55,7 +55,7 @@ public class LocationMessageBean implements MessageListener {
                 pstmt.setInt(5, 1);
 
                 pstmt.executeUpdate();
-                
+                System.out.println(str);
             } else {
                 System.out.println("error");
             }

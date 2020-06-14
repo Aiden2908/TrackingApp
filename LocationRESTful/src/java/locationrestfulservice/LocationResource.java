@@ -75,6 +75,7 @@ public class LocationResource {
     public String registerUser(String XML) {
         Location location;
         try {
+            /*
             String attr[] = XML.split(",");
             location = new Location(attr[0], attr[1], attr[2], attr[3]);
             
@@ -88,8 +89,9 @@ public class LocationResource {
             LocationMessageSender sender = new LocationMessageSender();
             sender.sendMessage(data);
             sender.closeConnection();
+            //*/
             
-            /* Code before JMS implementation
+            ///* Code before JMS implementation
             String attr[] = XML.split(",");
             location = new Location(attr[0], attr[1], attr[2], attr[3]);
             
@@ -97,7 +99,7 @@ public class LocationResource {
             if (sqlException != null) {
                 return "<error><reason>" + sqlException + "</reason></error>";
             }
-            */
+            //*/
         } catch (Exception e) {
             return "<error><reason>Invalid content</reason></error>";
         }
