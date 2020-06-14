@@ -2,6 +2,7 @@ package locationrestfulservice;
 
 import java.io.StringReader;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import javax.ejb.EJB;
 import javax.inject.Named;
@@ -76,10 +77,27 @@ public class LocationResource {
         try {
             String attr[] = XML.split(",");
             location = new Location(attr[0], attr[1], attr[2], attr[3]);
+            
+            ArrayList<String> data = new ArrayList<>();
+            
+            data.add(attr[0]);
+            data.add(attr[1]);
+            data.add(attr[2]);
+            data.add(attr[3]);
+            
+            LocationMessageSender sender = new LocationMessageSender();
+            sender.sendMessage(data);
+            sender.closeConnection();
+            
+            /* Code before JMS implementation
+            String attr[] = XML.split(",");
+            location = new Location(attr[0], attr[1], attr[2], attr[3]);
+            
             String sqlException = locationBean.registerNewUser(location);
             if (sqlException != null) {
                 return "<error><reason>" + sqlException + "</reason></error>";
             }
+            */
         } catch (Exception e) {
             return "<error><reason>Invalid content</reason></error>";
         }
