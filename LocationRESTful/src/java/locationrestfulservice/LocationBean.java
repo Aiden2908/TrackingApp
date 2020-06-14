@@ -83,6 +83,7 @@ public class LocationBean {
 
     //Method to handle setting user states to either logged logged in or logged out.
     public String userStates(Location location, int isLoggedIn) {
+        int i=0;
         try {
             Statement st = getConn().createStatement();
             ResultSet rs = st.executeQuery("select * from LocationAssignment where email='" + location.getEmail() + "' and password='" + location.getPassword() + "';");
@@ -91,6 +92,10 @@ public class LocationBean {
                 PreparedStatement pstmt = getConn().prepareStatement(sql);
                 pstmt.setInt(1, isLoggedIn);
                 pstmt.executeUpdate();
+                i++;
+            }
+            if(i==0){
+                return "doesnt-exist";
             }
         } catch (SQLException ex) {
             return "SQLException " + ex;
