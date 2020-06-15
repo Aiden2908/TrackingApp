@@ -7,6 +7,7 @@ import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -15,6 +16,8 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -35,6 +38,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class MapActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -45,13 +49,19 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     private ArrayList<Marker> currentMarkers;
     private GoogleMap googleMap;
     private String currentUserEmail;
+    LocationManager locationManager;
     private ArrayList<com.example.mapapp.Location> onlineUsers;
-   // private ArrayList<com.example.mapapp.Location> updatedOnlineUsers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 10, locationListenerGPS);
 
         markersArray = new ArrayList<>();
         currentMarkers=new ArrayList<>();
@@ -116,6 +126,32 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             }
         });
     }
+    LocationListener locationListenerGPS=new LocationListener() {
+        @Override
+        public void onLocationChanged(android.location.Location location) {
+            final double latitude=location.getLatitude();
+            final double longitude=location.getLongitude();
+            String msg="New Latitude: "+latitude + "New Longitude: "+longitude;
+            Toast.makeText(getApplicationContext(),msg,Toast.LENGTH_LONG).show();
+
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+    };
+
     private void displayMarkers(){
         if(googleMap!=null) {
             getOnlineUsers();
@@ -137,10 +173,9 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     public void onMapReady(GoogleMap googleMap) {
         this.googleMap=googleMap;
         displayMarkers();
-        tick();
-
+        updateMap();
     }
-    public synchronized void tick(){
+    public synchronized void updateMap(){
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -158,9 +193,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                                     for(com.example.mapapp.Location location:onlineUsers){
                                         if(location.email.equals(currentUserEmail)){
                                             markersArray.add(createMarker(googleMap,location.getLatitude(),location.getLongitude(),location.email,"Lat: "+location.getLatitude()+", Long: "+location.getLongitude(),false));
-                                            LatLng latLng=new LatLng(Double.parseDouble(location.latitude),Double.parseDouble(location.longitude));
-                                            googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
-                                            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng,16));
                                         }else{
                                             markersArray.add(createMarker(googleMap,location.getLatitude(),location.getLongitude(),location.email,"Lat: "+location.getLatitude()+", Long: "+location.getLongitude(),true));
                                         }
@@ -178,10 +210,10 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     }
     private BitmapDescriptor bitmapDescriptorFromVector(Context context, int verctorResID,boolean isRandomColor){
         Drawable vectorDrawable= ContextCompat.getDrawable(context,verctorResID);
-        if(isRandomColor){
-            vectorDrawable.setTint(Color.parseColor(getRandomColor()));
-        }else {
+        if(!isRandomColor){
             vectorDrawable.setTint(getResources().getColor(R.color.colorAccent));
+        }else {
+            vectorDrawable.setTint(getResources().getColor(R.color.orange));
         }
         vectorDrawable.setBounds(0,0,vectorDrawable.getIntrinsicWidth(),vectorDrawable.getIntrinsicHeight());
         Bitmap bitmap=Bitmap.createBitmap(vectorDrawable.getIntrinsicWidth(),vectorDrawable.getIntrinsicHeight(),Bitmap.Config.ARGB_8888);
@@ -217,39 +249,26 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                 break;
         }
     }
-    private class MarkerData{
-        private double latitude;
-        private double longitude;
-        private String title;
-        private String snippet;
-        private int iconResID;
 
-        public double getLatitude() {
-            return latitude;
-        }
+    private void updateUserLongLat(double lati,double longi){
 
-        public double getLongitude() {
-            return longitude;
-        }
+    }
 
-        public String getTitle() {
-            return title;
-        }
-
-        public String getSnippet() {
-            return snippet;
-        }
-
-        public int getIconResID() {
-            return iconResID;
-        }
-
-        public MarkerData(double latitude, double longitude, String title, String snippet, int iconResID) {
-            this.latitude = latitude;
-            this.longitude = longitude;
-            this.title = title;
-            this.snippet = snippet;
-            this.iconResID = iconResID;
-        }
+    @Override
+    public void onBackPressed() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                XML_Request xml_request=new XML_Request(XML_Request.LOGOUT_URL,"POST");
+                try {
+                    String res=xml_request.logoutUser(currentUserEmail);
+                    Log.i(this.getClass().getName(),":::::::::: LOGED OUT"+res);
+                    startActivity(new Intent(getApplicationContext(), LoginActivity.class));
+                    overridePendingTransition(0,0);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 }

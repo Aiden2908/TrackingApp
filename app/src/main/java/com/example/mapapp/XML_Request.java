@@ -40,6 +40,8 @@ import java.nio.charset.StandardCharsets;
 public class XML_Request implements Runnable {
     public static String API="http://10.0.2.2:8080/LocationRESTful/locationservice/location/";
     public static String LOGIN_URL="http://10.0.2.2:8080/LocationRESTful/locationservice/location/positive";
+    public static String LOGOUT_URL="http://10.0.2.2:8080/LocationRESTful/locationservice/location/negative";
+    public static String LONGLAT_URL="http://10.0.2.2:8080/LocationRESTful/locationservice/location/longlat";
     private String url;
     private String method;
     private ArrayList<Location> locations;
@@ -196,6 +198,50 @@ public class XML_Request implements Runnable {
              in.close();
          }
          return null;
+    }
+    String logoutUser(String email) throws IOException {
+        HttpURLConnection http=postRequest(LOGOUT_URL);
+        String data=email+",0,0,0";
+        byte[] out = data.getBytes(StandardCharsets.UTF_8);
+        int length = out.length;
+
+        http.setFixedLengthStreamingMode(length);
+        http.setRequestProperty("Content-Type", "application/xml; charset=UTF-8");
+        http.connect();
+        try (OutputStream os = http.getOutputStream()) {
+            os.write(out);
+
+            //System.out.println(http.getInputStream());
+            BufferedReader in = new BufferedReader(new InputStreamReader(http.getInputStream()));
+            String inputLine;
+            while ((inputLine = in.readLine()) != null){
+                return inputLine;
+            }
+            in.close();
+        }
+        return null;
+    }
+    String longLat(String email,double longi,double latit) throws IOException {
+        HttpURLConnection http=postRequest(LOGOUT_URL);
+        String data=email+",0,"+longi+","+latit;
+        byte[] out = data.getBytes(StandardCharsets.UTF_8);
+        int length = out.length;
+
+        http.setFixedLengthStreamingMode(length);
+        http.setRequestProperty("Content-Type", "application/xml; charset=UTF-8");
+        http.connect();
+        try (OutputStream os = http.getOutputStream()) {
+            os.write(out);
+
+            //System.out.println(http.getInputStream());
+            BufferedReader in = new BufferedReader(new InputStreamReader(http.getInputStream()));
+            String inputLine;
+            while ((inputLine = in.readLine()) != null){
+                return inputLine;
+            }
+            in.close();
+        }
+        return null;
     }
 
 
