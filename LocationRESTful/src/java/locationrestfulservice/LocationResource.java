@@ -113,7 +113,7 @@ public class LocationResource {
             Location location;
             try {
                 String attr[] = XML.split(",");
-                location = new Location(attr[0], attr[1], attr[2], attr[3]);
+                location = new Location(attr[0], "", "", "");
                 String sqlException = locationBean.userStates(location, 0);
                 if (sqlException != null) {
                     return "<error><reason>" + sqlException + "</reason></error>";

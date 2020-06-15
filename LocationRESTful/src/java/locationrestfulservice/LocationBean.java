@@ -82,30 +82,37 @@ public class LocationBean {
     }
 
     //Method to handle setting user states to either logged logged in or logged out.
-    public String userStates(Location location, int isLoggedIn) {
-        int i=0;
-        try {
-            Statement st = getConn().createStatement();
-            ResultSet rs = st.executeQuery("select * from LocationAssignment where email='" + location.getEmail() + "' and password='" + location.getPassword() + "';");
-            while (rs.next()) {
-                String sql = "UPDATE testUnrestricted.LocationAssignment SET isLoggedIn = ? WHERE email='" + location.getEmail() + "' and password='" + location.getPassword() + "';";
-                PreparedStatement pstmt = getConn().prepareStatement(sql);
-                pstmt.setInt(1, isLoggedIn);
-                pstmt.executeUpdate();
-                i++;
+    public String userStates(Location location, int isLoggedIn) throws SQLException {
+        if(isLoggedIn==1){
+            int i=0;
+            try {
+                Statement st = getConn().createStatement();
+                ResultSet rs = st.executeQuery("select * from LocationAssignment where email='" + location.getEmail() + "' and password='" + location.getPassword() + "';");
+                while (rs.next()) {
+                    String sql = "UPDATE testUnrestricted.LocationAssignment SET isLoggedIn = ? WHERE email='" + location.getEmail() + "' and password='" + location.getPassword() + "';";
+                    PreparedStatement pstmt = getConn().prepareStatement(sql);
+                    pstmt.setInt(1, isLoggedIn);
+                    pstmt.executeUpdate();
+                    i++;
+                }
+                if(i==0){
+                    return "doesnt-exist";
+                }
+            } catch (SQLException ex) {
+                return "SQLException " + ex;
             }
-            if(i==0){
-                return "doesnt-exist";
-            }
-        } catch (SQLException ex) {
-            return "SQLException " + ex;
+        }else{
+            String sql = "UPDATE testUnrestricted.LocationAssignment SET isLoggedIn = ? WHERE email='" + location.getEmail()+"';";
+            PreparedStatement pstmt = getConn().prepareStatement(sql);
+            pstmt.setInt(1, isLoggedIn);
+            pstmt.executeUpdate();
         }
         return null;
     }
 
     public String updateUserLocation(Location location) {
         try {
-            String sql = "UPDATE testUnrestricted.LocationAssignment SET longitude = ?, latitude = ? WHERE email='" + location.getEmail() + "' and password='" + location.getPassword() + "';";
+            String sql = "UPDATE testUnrestricted.LocationAssignment SET longitude = ?, latitude = ? WHERE email='" + location.getEmail()+ "';";
             PreparedStatement pstmt = getConn().prepareStatement(sql);
             pstmt.setString(1, location.getLongitude());
             pstmt.setString(2, location.getLatitude());
