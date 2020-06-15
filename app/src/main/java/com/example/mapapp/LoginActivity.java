@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -13,20 +14,23 @@ import android.widget.TextView;
 
 import java.io.IOException;
 
+//:: A class to handle login/registering user :://
 public class LoginActivity extends AppCompatActivity {
+    String gau;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        final EditText etEmail=findViewById(R.id.username);
-        final EditText etPassword=findViewById(R.id.password);
-        final TextView tvMessage=findViewById(R.id.message);
-        final ProgressBar progressBar=findViewById(R.id.loading);
-        Button btnLogin=findViewById(R.id.login);
+        final EditText etEmail = findViewById(R.id.username);
+        final EditText etPassword = findViewById(R.id.password);
+        final TextView tvMessage = findViewById(R.id.message);
+        final ProgressBar progressBar = findViewById(R.id.loading);
+        Button btnLogin = findViewById(R.id.login);
 
-        etEmail.setText("test@gmail.com");
+
+        etEmail.setText("Dtest@gmail.com");
         etPassword.setText("test");
 
         btnLogin.setOnClickListener(new View.OnClickListener() {
@@ -39,23 +43,25 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         try {
-                            XML_Request xml_request=new XML_Request(XML_Request.LOGIN_URL,"POST");
-                            final String result=xml_request.loginUser(etEmail.getText().toString(),etPassword.getText().toString());
+                            XML_Request xml_request = new XML_Request(XML_Request.LOGIN_URL, "POST");
+                            final String result = xml_request.loginUser(etEmail.getText().toString(), etPassword.getText().toString());
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    if(result==null){
+                                    Log.i(this.getClass().getName(), ":::::::::: Login response" + result);
+                                    if (result == null) {
                                         tvMessage.setText("Could not establish a connection to the server error.");
-                                    }else if(result.contains("doesnt-exist")){
-                                        createAccount(etEmail,etPassword,tvMessage,progressBar);
-                                    }else if(result.contains("user")){
-                                        Intent intent=new Intent(getApplicationContext(), MapActivity.class);
-                                        intent.putExtra("USER",etEmail.getText().toString());
+                                    } else if (result.contains("error")) {
+                                        tvMessage.setText("Server error (" + result + ").");
+                                    } else if (result.contains("doesnt-exist")) {
+                                        createAccount(etEmail, etPassword, tvMessage, progressBar);
+                                    } else if (result.contains("user")) {
+                                        Intent intent = new Intent(getApplicationContext(), MapActivity.class);
+                                        intent.putExtra("USER", etEmail.getText().toString());
+                                        overridePendingTransition(0, 0);
                                         startActivity(intent);
-                                        overridePendingTransition(0,0);
                                     }
                                     progressBar.setVisibility(View.GONE);
-                                   // tvMessage.setText(result);
                                 }
                             });
                         } catch (IOException e) {
@@ -65,28 +71,28 @@ public class LoginActivity extends AppCompatActivity {
                 }).start();
             }
         });
-
-
     }
-    private void createAccount(final EditText etEmail,final EditText etPassword,final TextView tvMessage,final ProgressBar progressBar){
+
+    //:: A method to handle registering user if current email entered is not already registered :://
+    private void createAccount(final EditText etEmail, final EditText etPassword, final TextView tvMessage, final ProgressBar progressBar) {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                XML_Request xml_request=new XML_Request(XML_Request.API,"POST");
+                XML_Request xml_request = new XML_Request(XML_Request.API, "POST");
                 try {
-                    final String result=xml_request.registerUser(etEmail.getText().toString(),etPassword.getText().toString());
+                    final String result = xml_request.registerUser(etEmail.getText().toString(), etPassword.getText().toString());
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            if(result.contains("userAlreadyExists")){
+                            if (result.contains("userAlreadyExists")) {
                                 tvMessage.setText("Invalid email or password.");
                                 progressBar.setVisibility(View.GONE);
-                            }else if(result.contains("user")){
+                            } else if (result.contains("user")) {
                                 tvMessage.setTextColor(Color.GREEN);
                                 tvMessage.setText("Account created");
                                 progressBar.setVisibility(View.GONE);
                             }
-                           // tvMessage.setText(result);
+                            // tvMessage.setText(result);
                         }
                     });
                 } catch (IOException e) {
@@ -95,5 +101,9 @@ public class LoginActivity extends AppCompatActivity {
 
             }
         }).start();
+    }
+
+    public String getMyData() {
+        return gau;
     }
 }

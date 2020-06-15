@@ -1,6 +1,7 @@
 package com.example.mapapp;
 
 import androidx.annotation.NonNull;
+
 //:: A class to handle parsing XML :://
 public class Location {
     public String email, password, longitude, latitude;
@@ -18,9 +19,9 @@ public class Location {
     @NonNull
     @Override
     public String toString() {
-        return email +",\n"+
-                latitude +",\n"+
-                longitude +",\n";
+        return email + ",\n" +
+                latitude + ",\n" +
+                longitude + ",\n";
     }
 
     public String getEmail() {
