@@ -58,7 +58,7 @@ public class LocationBean {
         }
     }
 
-    // Method which pulls the data from the database and then saves it in the locationList
+    // Method which sends a JMS message for a bean to collect in order to register a new user to the system
     public String registerNewUser(Location location) {
         try {
             String sql = "INSERT INTO testUnrestricted.LocationAssignment (email,password,longitude,latitude,isLoggedIn) VALUES (?,?,?,?,?);";
