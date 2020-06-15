@@ -18,8 +18,8 @@ public class Location {
     @NonNull
     @Override
     public String toString() {
-        return password +",\n"+
-                email +",\n"+
+        return email +",\n"+
+                latitude +",\n"+
                 longitude +",\n";
     }
 

@@ -16,6 +16,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -42,7 +43,10 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     private static final int REQUEST_CODE = 101;
     ArrayList<Marker> markersArray;
     private ArrayList<Marker> currentMarkers;
+    private GoogleMap googleMap;
+    private String currentUserEmail;
     private ArrayList<com.example.mapapp.Location> onlineUsers;
+   // private ArrayList<com.example.mapapp.Location> updatedOnlineUsers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,38 +57,45 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         currentMarkers=new ArrayList<>();
         onlineUsers=new ArrayList<>();
 
-        final Button btnRefresh=findViewById(R.id.refresh);
+        Bundle extras = getIntent().getExtras();
+        if(extras == null) {
+            currentUserEmail= null;
+            return;
+        } else {
+            currentUserEmail= extras.getString("USER");
+        }
+        getOnlineUsers();
 
-        btnRefresh.setOnClickListener(new View.OnClickListener() {
+        final Button btnShowUser=findViewById(R.id.showUser);
+
+        btnShowUser.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                for(Marker marker:currentMarkers){
-                    marker.remove();
+                for(com.example.mapapp.Location location:onlineUsers) {
+                    if(location.email.equals(currentUserEmail)){
+                        LatLng latLng = new LatLng(Double.parseDouble(location.latitude), Double.parseDouble(location.longitude));
+                        googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
+                        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
+                    }
                 }
+
             }
         });
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         getLastLocation();
     }
-    private void getOnlineUsers(final GoogleMap googleMap){
-        final XML_Request allStocks = new XML_Request(XML_Request.API,"GET") {
+    private void getOnlineUsers(){
+        final XML_Request onlineUsers = new XML_Request(XML_Request.API,"GET") {
             @Override
             void onResponse() {
                 //:: Once a response has received comeback to UI thread and update :://
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        onlineUsers=getResponse();
-                        for(com.example.mapapp.Location location:onlineUsers){
-                            String snip="Lat: "+location.latitude+", Long: "+location.longitude;
-                            markersArray.add(createMarker(googleMap,location.getLatitude(),location.getLongitude(),location.email,snip));
-                        }
-                    }
-                });
+                MapActivity.this.onlineUsers=getResponse();
+                Log.i(this.getClass().getName(),"::::::::::"+MapActivity.this.onlineUsers);
+
             }
         };
 
-        Thread t = new Thread(allStocks, "");
+        Thread t = new Thread(onlineUsers, "");
         t.start();
     }
     private void getLastLocation() {
@@ -99,42 +110,93 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             public void onSuccess(Location location) {
                 if(location!=null){
                     currentLocation=location;
-                   // Toast.makeText(getApplicationContext(),currentLocation.getLatitude()+","+currentLocation.getLongitude(),Toast.LENGTH_SHORT).show();
                     SupportMapFragment supportMapFragment=(SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.googleMap);
                     supportMapFragment.getMapAsync(MapActivity.this);
                 }
             }
         });
     }
-
+    private void displayMarkers(){
+        if(googleMap!=null) {
+            getOnlineUsers();
+            try {
+                for(com.example.mapapp.Location location:onlineUsers){
+                    if(location.email.equals(currentUserEmail)){
+                        markersArray.add(createMarker(googleMap,location.getLatitude(),location.getLongitude(),location.email,"Lat: "+location.getLatitude()+", Long: "+location.getLongitude(),false));
+                        LatLng latLng=new LatLng(Double.parseDouble(location.latitude),Double.parseDouble(location.longitude));
+                        googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
+                        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng,16));
+                    }else{
+                        markersArray.add(createMarker(googleMap,location.getLatitude(),location.getLongitude(),location.email,"Lat: "+location.getLatitude()+", Long: "+location.getLongitude(),true));
+                    }
+                }
+            }catch (Exception er){}
+        }
+    }
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        getOnlineUsers(googleMap);
-        Toast.makeText(getApplicationContext(),""+onlineUsers.size(),Toast.LENGTH_SHORT).show();
-        LatLng latLng=new LatLng(-35.720399,174.321233);
-
-
-        googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
-        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng,16));
+        this.googleMap=googleMap;
+        displayMarkers();
+        tick();
 
     }
-    private BitmapDescriptor bitmapDescriptorFromVector(Context context, int verctorResID){
+    public synchronized void tick(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true){
+                    try {
+                        Thread.sleep(6000);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                for(Marker marker:markersArray){
+                                    marker.remove();
+                                }
+                                getOnlineUsers();
+                                try {
+                                    for(com.example.mapapp.Location location:onlineUsers){
+                                        if(location.email.equals(currentUserEmail)){
+                                            markersArray.add(createMarker(googleMap,location.getLatitude(),location.getLongitude(),location.email,"Lat: "+location.getLatitude()+", Long: "+location.getLongitude(),false));
+                                            LatLng latLng=new LatLng(Double.parseDouble(location.latitude),Double.parseDouble(location.longitude));
+                                            googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
+                                            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng,16));
+                                        }else{
+                                            markersArray.add(createMarker(googleMap,location.getLatitude(),location.getLongitude(),location.email,"Lat: "+location.getLatitude()+", Long: "+location.getLongitude(),true));
+                                        }
+                                    }
+                                }catch (Exception er){}
+
+                            }
+                        });
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
+    }
+    private BitmapDescriptor bitmapDescriptorFromVector(Context context, int verctorResID,boolean isRandomColor){
         Drawable vectorDrawable= ContextCompat.getDrawable(context,verctorResID);
-        vectorDrawable.setTint(Color.parseColor(getRandomColor()));
+        if(isRandomColor){
+            vectorDrawable.setTint(Color.parseColor(getRandomColor()));
+        }else {
+            vectorDrawable.setTint(getResources().getColor(R.color.colorAccent));
+        }
         vectorDrawable.setBounds(0,0,vectorDrawable.getIntrinsicWidth(),vectorDrawable.getIntrinsicHeight());
         Bitmap bitmap=Bitmap.createBitmap(vectorDrawable.getIntrinsicWidth(),vectorDrawable.getIntrinsicHeight(),Bitmap.Config.ARGB_8888);
         Canvas canvas =new Canvas(bitmap);
         vectorDrawable.draw(canvas);
         return BitmapDescriptorFactory.fromBitmap(bitmap);
     }
-    protected Marker createMarker(GoogleMap googleMap,double latitude, double longitude, String title, String snippet) {
+    protected Marker createMarker(GoogleMap googleMap,double latitude, double longitude, String title, String snippet,boolean isRandomColor) {
         return googleMap.addMarker(new MarkerOptions()
                 .position(new LatLng(latitude, longitude))
                 .anchor(0.5f, 0.5f)
                 .title(title)
                 .snippet(snippet)
                 //.icon(smallMarker));
-                .icon(bitmapDescriptorFromVector(getApplicationContext(),R.drawable.ic_map_man)));
+                .icon(bitmapDescriptorFromVector(getApplicationContext(),R.drawable.ic_map_man,isRandomColor)));
     }
     private String getRandomColor() {
         String letters = "0123456789ABCDEF";

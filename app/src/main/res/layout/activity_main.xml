@@ -6,11 +6,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MapActivity">
+
     <Button
-        android:layout_width="match_parent"
-        android:layout_height="70sp"
-        android:id="@+id/refresh"
-        android:text="Refresh"/>
+        android:id="@+id/showUser"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="50dp"
+        android:layout_marginLeft="340sp"
+        android:background="@drawable/ic_show_user"
+        android:backgroundTint="@color/colorAccent"/>
+
     <fragment
         android:layout_width="match_parent"
         android:layout_height="match_parent"

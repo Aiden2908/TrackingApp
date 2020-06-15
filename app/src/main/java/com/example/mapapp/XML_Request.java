@@ -47,10 +47,13 @@ public class XML_Request implements Runnable {
     XML_Request(String url,String method){
         this.url=url;
         this.method=method;
+        Log.i(this.getClass().getName(),"CREATE ");
+
     }
     @Override
     public void run() {
         if(method.equals("GET")) {
+            Log.i(this.getClass().getName(),"START ");
             try {
                 Document document = requestXML();
                 parseXML(document);
@@ -62,8 +65,6 @@ public class XML_Request implements Runnable {
             } catch (SAXException e) {
                 e.printStackTrace();
             }
-        }else if(method.equals("POST")){
-            //Login
         }
     }
 
@@ -81,6 +82,9 @@ public class XML_Request implements Runnable {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db = dbf.newDocumentBuilder();
         Document doc = db.parse(new URL(url).openStream());
+        if(doc==null){
+            Log.i(this.getClass().getName(),"IS NULL CUNT ");
+        }
         return doc;
     }
 

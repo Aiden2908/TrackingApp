@@ -26,7 +26,7 @@ public class LoginActivity extends AppCompatActivity {
         final ProgressBar progressBar=findViewById(R.id.loading);
         Button btnLogin=findViewById(R.id.login);
 
-        etEmail.setText("testa@gmail.com");
+        etEmail.setText("test@gmail.com");
         etPassword.setText("test");
 
         btnLogin.setOnClickListener(new View.OnClickListener() {
@@ -49,7 +49,9 @@ public class LoginActivity extends AppCompatActivity {
                                     }else if(result.contains("doesnt-exist")){
                                         createAccount(etEmail,etPassword,tvMessage,progressBar);
                                     }else if(result.contains("user")){
-                                        startActivity(new Intent(getApplicationContext(), MapActivity.class));
+                                        Intent intent=new Intent(getApplicationContext(), MapActivity.class);
+                                        intent.putExtra("USER",etEmail.getText().toString());
+                                        startActivity(intent);
                                         overridePendingTransition(0,0);
                                     }
                                     progressBar.setVisibility(View.GONE);
